@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIỂM TRA CỦNG CỐ BÀI HỌC ARENE</title>
+    <style>
+        /* I. GIAO DIỆN & NỀN NEON TÍM */
+        :root {
+            --purple-neon: #bc13fe;
+            --purple-dark: #2a0845;
+            --gold: #FFD700;
+            --blue-text: #0000FF;
+            --green-correct: #28a745;
+            --red-wrong: #dc3545;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--purple-dark);
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(188, 19, 254, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(138, 43, 226, 0.2) 0%, transparent 40%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Hiệu ứng long lanh */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 850px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(188, 19, 254, 0.6);
+            padding: 30px;
+            margin: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-box {
+            background-color: var(--gold);
+            color: var(--blue-text);
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 30px;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            text-transform: uppercase;
+        }
+
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--purple-dark); }
+        input[type="text"], input[type="number"] {
+            width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: var(--purple-neon); box-shadow: 0 0 8px rgba(188, 19, 254, 0.3); }
+
+        .btn {
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            color: white; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.3s;
+        }
+        .btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
+        .btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-2px); }
+
+        .hidden { display: none; }
+        .question-box { margin-bottom: 20px; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .q-text { font-size: 19px; font-weight: bold; margin-bottom: 20px; color: #2a0845; line-height: 1.6; }
+        
+        /* Trắc nghiệm */
+        .options { display: grid; gap: 12px; }
+        .option {
+            background: #f8f9fa; border: 2px solid #eee; padding: 14px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 17px;
+        }
+        .option:hover { border-color: var(--purple-neon); background: #f1e6ff; }
+        .option.selected { background: var(--purple-neon); color: white; border-color: var(--purple-neon); }
+
+        /* Đúng sai */
+        .tf-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; border-radius: 10px; overflow: hidden; }
+        .tf-table td { padding: 15px; border-bottom: 1px solid #f0f0f0; font-size: 16px; }
+        .tf-choice { display: flex; gap: 10px; justify-content: flex-end; }
+        .tf-btn {
+            padding: 8px 18px; border: 2px solid #eee; border-radius: 8px; cursor: pointer; background: white; font-weight: bold; transition: 0.2s;
+        }
+        .tf-btn:hover { border-color: var(--purple-neon); }
+        .tf-btn.selected { background: var(--purple-neon); color: white; border-color: var(--purple-neon); }
+
+        /* KÉO THẢ (CẢI TIẾN) */
+        .drag-sentence { font-size: 19px; line-height: 2.2; margin-bottom: 25px; padding: 15px; background: #fdfbff; border-left: 5px solid var(--purple-neon); border-radius: 5px; }
+        .drop-zone {
+            display: inline-block;
+            min-width: 120px;
+            height: 35px;
+            border: 2px dashed var(--purple-neon);
+            background: #fff;
+            margin: 0 8px;
+            text-align: center;
+            vertical-align: middle;
+            color: var(--purple-dark);
+            font-weight: bold;
+            border-radius: 6px;
+            transition: 0.3s;
+            line-height: 31px;
+            cursor: pointer;
+        }
+        .drop-zone.over { background: rgba(188, 19, 254, 0.1); transform: scale(1.05); border-style: solid; }
+        .drop-zone.filled { border-style: solid; background: #f1e6ff; }
+
+        .word-bank { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 15px; border: 1px solid #eee; }
+        .word {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: grab;
+            user-select: none;
+            border: 2px solid #ddd;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+            transition: 0.2s;
+        }
+        .word:active { cursor: grabbing; }
+        .word:hover { border-color: var(--purple-neon); transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+        .word.selected { background: var(--gold); border-color: orange; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+        .word.used { opacity: 0.4; cursor: default; pointer-events: none; background: #eee; }
+
+        /* Review Screen */
+        .review-item { border-bottom: 2px solid #eee; padding: 20px 0; }
+        .review-line { margin: 8px 0; line-height: 1.5; }
+        .text-green { color: var(--green-correct) !important; font-weight: bold; }
+        .text-red { color: var(--red-wrong) !important; font-weight: bold; }
+        .label-badge { font-size: 12px; padding: 2px 8px; border-radius: 4px; background: #eee; margin-right: 5px; color: #666; }
+
+        #score-summary { text-align: center; margin-bottom: 30px; }
+        #score-summary h2 { font-size: 40px; color: var(--purple-neon); margin: 10px 0; text-shadow: 0 0 10px rgba(188, 19, 254, 0.2); }
+
+        sub { vertical-align: sub; font-size: smaller; }
+        sup { vertical-align: super; font-size: smaller; }
+
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+    <div class="header-box">KIỂM TRA CỦNG CỐ BÀI HỌC ARENE</div>
+
+    <!-- Màn hình nhập thông tin -->
+    <div id="setup-screen">
+        <div class="input-group">
+            <label>Họ và tên học sinh:</label>
+            <input type="text" id="name" placeholder="Ví dụ: Nguyễn Văn A" oninput="validateSetup()">
+        </div>
+        <div class="input-group">
+            <label>Lớp:</label>
+            <input type="text" id="class" placeholder="Ví dụ: 12A1" oninput="validateSetup()">
+        </div>
+        <p style="text-align: center; font-size: 14px; color: #666;">Nhập đủ thông tin để bắt đầu làm bài.</p>
+        <button id="start-btn" class="btn" disabled onclick="startQuiz()">Bắt đầu làm bài</button>
+    </div>
+
+    <!-- Màn hình câu hỏi -->
+    <div id="quiz-screen" class="hidden">
+        <div id="question-container"></div>
+        <div style="margin-top: 30px;">
+            <button id="next-btn" class="btn" onclick="handleNext()">Tiếp theo</button>
+        </div>
+    </div>
+
+    <!-- Màn hình kết quả -->
+    <div id="result-screen" class="hidden">
+        <div id="score-summary">
+            <h3>KẾT QUẢ BÀI LÀM</h3>
+            <h2 id="final-score">0.0 / 10</h2>
+            <div id="save-msg" style="padding: 10px; border-radius: 8px; margin-top: 10px;">Đang chuẩn bị gửi điểm...</div>
+        </div>
+        <div style="display: grid; gap: 10px;">
+            <button class="btn" onclick="showReview()">Xem lại kết quả chi tiết</button>
+            <button class="btn" style="background: #6c757d;" onclick="location.reload()">Làm lại bài mới</button>
+        </div>
+    </div>
+
+    <!-- Màn hình Xem lại (Review) -->
+    <div id="review-screen" class="hidden">
+        <div class="header-box" style="font-size: 18px; padding: 10px; background: #eee; color: #333; border: none;">BẢNG SO SÁNH CHI TIẾT ĐÁP ÁN</div>
+        <div id="review-container"></div>
+        <button class="btn" style="margin-top: 20px;" onclick="location.reload()">Thoát & Làm bài mới</button>
+    </div>
+</div>
+
+<script>
+    // --- CẤU HÌNH WEB APP URL ---
+    const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzKt0U0FJhel9kxKSfxuZuLkZsTMWw3F3lK42pAqN70s9grV09AdKqz8jMHk3b8-xpa/exec"; 
+
+    // --- DỮ LIỆU CÂU HỎI (KHÓA CỨNG) ---
+    const QUESTIONS_DATA = [
+        { id: 1, part: 1, type: "mcq", q: "Đặc điểm cấu trúc nào làm cho benzene có tính chất hoá học đặc biệt so với alkene?", options: ["Có 3 liên kết đôi riêng biệt.", "Có hệ liên hợp vòng bền vững.", "Có liên kết ba trong vòng.", "Có liên kết ion."], correct: "Có hệ liên hợp vòng bền vững." },
+        { id: 2, part: 1, type: "mcq", q: "Công thức tổng quát của dãy đồng đẳng benzene là", options: ["C<sub>n</sub>H<sub>2n</sub>", "C<sub>n</sub>H<sub>2n-2</sub>", "C<sub>n</sub>H<sub>2n-6</sub> (n ≥ 6)", "C<sub>n</sub>H<sub>2n+2</sub>"], correct: "C<sub>n</sub>H<sub>2n-6</sub> (n ≥ 6)" },
+        { id: 3, part: 1, type: "mcq", q: "Hợp chất nào sau đây là propylbenzene?", options: ["C<sub>6</sub>H<sub>5</sub>-CH(CH<sub>3</sub>)<sub>2</sub>", "C<sub>6</sub>H<sub>5</sub>-CH<sub>2</sub>CH<sub>2</sub>CH<sub>3</sub>", "C<sub>6</sub>H<sub>5</sub>-CH<sub>3</sub>", "C<sub>6</sub>H<sub>5</sub>-C(CH<sub>3</sub>)<sub>3</sub>"], correct: "C<sub>6</sub>H<sub>5</sub>-CH<sub>2</sub>CH<sub>2</sub>CH<sub>3</sub>" },
+        { id: 4, part: 1, type: "mcq", q: "Công thức phân tử của xylene là", options: ["C<sub>7</sub>H<sub>8</sub>", "C<sub>8</sub>H<sub>10</sub>", "C<sub>9</sub>H<sub>12</sub>", "C<sub>10</sub>H<sub>8</sub>"], correct: "C<sub>8</sub>H<sub>10</sub>" },
+        { id: 5, part: 1, type: "mcq", q: "Có bao nhiêu đồng phân vị trí của dimethylbenzene?", options: ["2", "3", "4", "5"], correct: "3" },
+        { id: 6, part: 1, type: "mcq", q: "Phản ứng đặc trưng của benzene là", options: ["Phản ứng cộng H<sub>2</sub>", "Phản ứng thế trên vòng", "Phản ứng trùng hợp", "Phản ứng tách nước"], correct: "Phản ứng thế trên vòng" },
+        { id: 7, part: 1, type: "mcq", q: "Khi cho ethylbenzene tác dụng với dung dịch KMnO<sub>4</sub> nóng, sản phẩm hữu cơ thu được là", options: ["Benzene", "Benzoic acid", "Styrene", "Ethanol"], correct: "Benzoic acid" },
+        { id: 8, part: 1, type: "mcq", q: "Trong phân tử benzene, độ dài các liên kết C-C", options: ["Không bằng nhau", "Bằng độ dài liên kết đôi", "Bằng độ dài liên kết đơn", "Bằng nhau và trung gian giữa đơn và đôi"], correct: "Bằng nhau và trung gian giữa đơn và đôi" },
+        { id: 9, part: 1, type: "mcq", q: "Nitro hoá benzene tạo sản phẩm chính là", options: ["m-dinitrobenzene", "Nitrobenzene", "o-nitrobenzene", "p-nitrobenzene"], correct: "Nitrobenzene" },
+        { id: 10, part: 1, type: "mcq", q: "Khi chiếu sáng hỗn hợp benzene và Cl<sub>2</sub> (dư), sản phẩm thu được là", options: ["Chlorobenzene", "Hexachlorocyclohexane", "Benzyl chloride", "Dichlorobenzene"], correct: "Hexachlorocyclohexane" },
+        { id: 11, part: 1, type: "mcq", q: "Toluene phản ứng thế brom (FeBr<sub>3</sub>, t<sup>0</sup>C) chủ yếu tạo", options: ["m-bromotoluene", "Hỗn hợp o- và p-bromotoluene", "p-bromotoluene duy nhất", "Benzyl bromide"], correct: "Hỗn hợp o- và p-bromotoluene" },
+        { id: 12, part: 1, type: "mcq", q: "Chất nào sau đây làm mất màu dung dịch KMnO<sub>4</sub> ở điều kiện thường?", options: ["Benzene", "Toluene", "Styrene", "Ethylbenzene"], correct: "Styrene" },
+        { id: 13, part: 1, type: "mcq", q: "Khi oxi hoá m-xylene bằng KMnO<sub>4</sub> nóng, sản phẩm thu được là", options: ["1,3-benzenedicarboxylic acid", "Benzoic acid", "1,2-benzenedicarboxylic acid", "Benzaldehyde"], correct: "1,3-benzenedicarboxylic acid" },
+        { id: 14, part: 1, type: "mcq", q: "Chất nào sau đây chỉ tạo một sản phẩm monobrom duy nhất khi brom hoá (FeBr<sub>3</sub>)?", options: ["Benzene", "Toluene", "o-xylene", "p-xylene"], correct: "Benzene" },
+        { id: 15, part: 1, type: "mcq", q: "Số liên kết π trong phân tử benzene là", options: ["2", "3", "4", "6"], correct: "3" },
+        { id: 16, part: 1, type: "mcq", q: "Công thức cấu tạo thu gọn của isopropylbenzene là", options: ["C<sub>6</sub>H<sub>5</sub>-CH<sub>2</sub>CH<sub>3</sub>", "C<sub>6</sub>H<sub>5</sub>-CH<sub>3</sub>", "C<sub>6</sub>H<sub>5</sub>-CH(CH<sub>3</sub>)<sub>2</sub>", "C<sub>6</sub>H<sub>5</sub>-C<sub>2</sub>H<sub>5</sub>"], correct: "C<sub>6</sub>H<sub>5</sub>-CH(CH<sub>3</sub>)<sub>2</sub>" },
+
+        { id: 17, part: 2, type: "tf", q: "Lựa chọn phát biểu đúng-sai.", subItems: [
+            { label: "a) Benzene bền vững hơn nhiều so với cyclohexatriene giả định.", ans: "Đúng" },
+            { label: "b) Benzene dễ tham gia phản ứng cộng hơn ethene.", ans: "Sai" },
+            { label: "c) Alkylbenzene có thể bị oxi hoá ở mạch nhánh.", ans: "Đúng" },
+            { label: "d) Benzene phản ứng với Br<sub>2</sub> ở điều kiện thường không cần xúc tác.", ans: "Sai" }
+        ]},
+        { id: 18, part: 2, type: "tf", q: "Lựa chọn phát biểu đúng-sai.", subItems: [
+            { label: "a) Nhóm CH<sub>3</sub> là nhóm định hướng ortho, para.", ans: "Đúng" },
+            { label: "b) Nitro hoá benzene cần H<sub>2</sub>SO<sub>4</sub> đặc làm xúc tác.", ans: "Đúng" },
+            { label: "c) Vòng benzene dễ bị phá vỡ bởi KMnO<sub>4</sub> loãng nguội.", ans: "Sai" },
+            { label: "d) Styrene có thể tham gia phản ứng trùng hợp.", ans: "Đúng" }
+        ]},
+
+        { id: 19, part: 3, type: "short", q: "Có bao nhiêu đồng phân cấu tạo của hydrocarbon thơm ứng với công thức C<sub>9</sub>H<sub>12</sub>?", correct: 8 },
+        { id: 20, part: 3, type: "short", q: "Một arene X có M = 78. Số nguyên tử carbon trong X là bao nhiêu?", correct: 6 },
+        { id: 21, part: 3, type: "short", q: "Cho 7,8 gam benzene tác dụng với HNO<sub>3</sub> (dư), hiệu suất 75%. Tính khối lượng nitrobenzene thu được (làm tròn đến 0,1 gam).", correct: 9.2 },
+        { id: 22, part: 3, type: "short", q: "Khi oxi hoá hoàn toàn toluene bằng KMnO<sub>4</sub> nóng, thu được benzoic acid. Có bao nhiêu nhận định đúng<br>(a) Phản ứng xảy ra ở mạch nhánh. (b) Vòng benzene bị phá vỡ. (c) Sản phẩm có tính acid. (d) Phản ứng xảy ra ở điều kiện nguội.", correct: 2 },
+
+        { id: 23, part: 4, type: "drag", q: "Để phân biệt benzene và styrene, ta cho dung dịch (1) [____] vào hai ống nghiệm ở điều kiện thường, chất làm mất màu dung dịch là (2) [____].", slots: ["(1)", "(2)"], bank: ["Br<sub>2</sub>", "styrene", "KMnO<sub>4</sub>"], correct: ["Br<sub>2</sub>", "styrene"] },
+        { id: 24, part: 4, type: "drag", q: "Để phân biệt ethylbenzene và benzene, ta cho dung dịch KMnO<sub>4</sub> loãng vào hai ống nghiệm, sau đó (1) [____], chất làm màu là (2) [____].", slots: ["(1)", "(2)"], bank: ["đun nóng", "ethylbenzene", "làm lạnh"], correct: ["đun nóng", "ethylbenzene"] }
+    ];
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let userAnswers = {};
+    let selectedWordText = null;
+
+    // --- LOGIC HỆ THỐNG ---
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function validateSetup() {
+        const name = document.getElementById('name').value.trim();
+        const className = document.getElementById('class').value.trim();
+        document.getElementById('start-btn').disabled = !(name && className);
+    }
+
+    function startQuiz() {
+        currentQuestions = shuffle([...QUESTIONS_DATA]);
+        currentQuestions.forEach(q => {
+            if (q.type === 'mcq') q.options = shuffle([...q.options]);
+            if (q.type === 'drag') q.bank = shuffle([...q.bank]);
+        });
+
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = currentQuestions[currentIndex];
+        const container = document.getElementById('question-container');
+        let html = `<div class="question-box">
+            <div class="q-text"><b>CÂU ${currentIndex + 1}:</b> ${q.type === 'drag' ? '' : q.q}</div>`;
+
+        if (q.type === 'mcq') {
+            html += `<div class="options">`;
+            q.options.forEach(opt => {
+                const isSel = userAnswers[q.id] === opt ? 'selected' : '';
+                html += `<div class="option ${isSel}" onclick="selectMCQ(${q.id}, '${opt}')">${opt}</div>`;
+            });
+            html += `</div>`;
+        } 
+        else if (q.type === 'tf') {
+            html += `<table class="tf-table">`;
+            q.subItems.forEach((item, idx) => {
+                const userVal = (userAnswers[q.id] || {})[idx];
+                html += `<tr>
+                    <td>${item.label}</td>
+                    <td class="tf-choice">
+                        <div class="tf-btn ${userVal === 'Đúng' ? 'selected' : ''}" onclick="selectTF(${q.id}, ${idx}, 'Đúng')">Đúng</div>
+                        <div class="tf-btn ${userVal === 'Sai' ? 'selected' : ''}" onclick="selectTF(${q.id}, ${idx}, 'Sai')">Sai</div>
+                    </td>
+                </tr>`;
+            });
+            html += `</table>`;
+        } 
+        else if (q.type === 'short') {
+            html += `<div style="text-align:center;"><input type="number" step="0.1" id="short-${q.id}" class="short-ans-input" style="width: 200px; text-align: center; border: 2px solid var(--purple-neon); border-radius: 10px; padding: 15px; font-size: 20px;" placeholder="Nhập số..." value="${userAnswers[q.id] || ''}" oninput="saveShort(${q.id})"></div>`;
+        } 
+        else if (q.type === 'drag') {
+            const answers = userAnswers[q.id] || {};
+            let sentence = q.q;
+            q.slots.forEach((slot, idx) => {
+                const val = answers[idx] ? answers[idx] : '...';
+                const filledClass = answers[idx] ? 'filled' : '';
+                sentence = sentence.replace('[____]', `<span class="drop-zone ${filledClass}" 
+                    id="drop-${q.id}-${idx}"
+                    onover="event.preventDefault()" 
+                    ondragover="handleDragOver(event)" 
+                    ondragleave="handleDragLeave(event)" 
+                    ondrop="handleDrop(event, ${q.id}, ${idx})"
+                    onclick="handleClickSlot(${q.id}, ${idx})">${val}</span>`);
+            });
+            html += `<div class="drag-sentence">${sentence}</div>`;
+            html += `<div style="font-size: 14px; color: #888; margin-bottom: 10px;">(Kéo từ vào ô trống hoặc chạm để chọn)</div>`;
+            html += `<div class="word-bank">`;
+            q.bank.forEach((w, wIdx) => {
+                const isUsed = Object.values(answers).includes(w);
+                const isSel = (selectedWordText === w) ? 'selected' : '';
+                html += `<div class="word ${isUsed ? 'used' : ''} ${isSel}" 
+                    draggable="true" 
+                    ondragstart="handleDragStart(event, '${w}')"
+                    onclick="handleWordClick(this, '${w}')">${w}</div>`;
+            });
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+        container.innerHTML = html;
+        document.getElementById('next-btn').innerText = (currentIndex === currentQuestions.length - 1) ? "Nộp bài & Lưu điểm" : "Tiếp theo";
+    }
+
+    // --- EVENT HANDLERS MCQ / TF / SHORT ---
+    function selectMCQ(qid, val) { userAnswers[qid] = val; renderQuestion(); }
+    function selectTF(qid, idx, val) { if (!userAnswers[qid]) userAnswers[qid] = {}; userAnswers[qid][idx] = val; renderQuestion(); }
+    function saveShort(qid) { userAnswers[qid] = document.getElementById(`short-${qid}`).value; }
+
+    // --- EVENT HANDLERS KÉO THẢ (DRAG & DROP) ---
+    function handleDragStart(ev, word) {
+        ev.dataTransfer.setData("text/plain", word);
+        selectedWordText = word;
+    }
+
+    function handleDragOver(ev) {
+        ev.preventDefault();
+        ev.currentTarget.classList.add('over');
+    }
+
+    function handleDragLeave(ev) {
+        ev.currentTarget.classList.remove('over');
+    }
+
+    function handleDrop(ev, qid, idx) {
+        ev.preventDefault();
+        ev.currentTarget.classList.remove('over');
+        const word = ev.dataTransfer.getData("text/plain");
+        if (word) {
+            if (!userAnswers[qid]) userAnswers[qid] = {};
+            // Nếu ô đã có từ khác, từ đó sẽ quay lại bank (do renderQuestion xử lý logic Used)
+            userAnswers[qid][idx] = word;
+            selectedWordText = null;
+            renderQuestion();
+        }
+    }
+
+    // --- FALLBACK CLICK CHO MOBILE ---
+    function handleWordClick(el, word) {
+        if (el.classList.contains('used')) return;
+        selectedWordText = word;
+        document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+
+    function handleClickSlot(qid, idx) {
+        if (selectedWordText) {
+            if (!userAnswers[qid]) userAnswers[qid] = {};
+            userAnswers[qid][idx] = selectedWordText;
+            selectedWordText = null;
+            renderQuestion();
+        } else {
+            // Nếu click vào ô đã có từ mà không chọn từ mới -> xóa từ trong ô
+            if (userAnswers[qid] && userAnswers[qid][idx]) {
+                delete userAnswers[qid][idx];
+                renderQuestion();
+            }
+        }
+    }
+
+    function handleNext() {
+        if (currentIndex < currentQuestions.length - 1) {
+            currentIndex++;
+            renderQuestion();
+        } else {
+            submitQuiz();
+        }
+    }
+
+    function submitQuiz() {
+        let total = 0;
+        let correctC = 0;
+
+        currentQuestions.forEach(q => {
+            let qScore = 0;
+            if (q.type === 'mcq') {
+                if (userAnswers[q.id] === q.correct) { qScore = 0.25; correctC++; }
+            } else if (q.type === 'tf') {
+                let subCorrect = 0;
+                q.subItems.forEach((item, idx) => {
+                    if ((userAnswers[q.id] || {})[idx] === item.ans) subCorrect++;
+                });
+                qScore = subCorrect * 0.25;
+                if (subCorrect === 4) correctC++;
+            } else if (q.type === 'short') {
+                if (parseFloat(userAnswers[q.id]) === q.correct) { qScore = 0.5; correctC++; }
+            } else if (q.type === 'drag') {
+                let dragCorrect = 0;
+                q.correct.forEach((ans, idx) => {
+                    if ((userAnswers[q.id] || {})[idx] === ans) dragCorrect += 0.5;
+                });
+                qScore = dragCorrect;
+                if (dragCorrect === 1.0) correctC++;
+            }
+            total += qScore;
+            q.earned = qScore;
+        });
+
+        const finalScore = total.toFixed(2);
+        document.getElementById('final-score').innerText = `${finalScore.replace('.', ',')} / 10`;
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+
+        saveToSheet(finalScore, correctC);
+    }
+
+    function saveToSheet(score, correctCount) {
+        const msgBox = document.getElementById('save-msg');
+        if (!GOOGLE_WEB_APP_URL) {
+            msgBox.innerHTML = "⚠️ Chưa cấu hình Web App URL. Điểm lưu tạm tại đây.";
+            msgBox.style.background = "#fff3cd";
+            return;
+        }
+
+        fetch(GOOGLE_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: document.getElementById('name').value,
+                className: document.getElementById('class').value,
+                score: score,
+                correctCount: correctCount,
+                totalCount: currentQuestions.length
+            })
+        })
+        .then(() => {
+            msgBox.innerHTML = "✔️ Điểm đã được lưu vào hệ thống thành công!";
+            msgBox.style.background = "#d4edda";
+            msgBox.style.color = "#155724";
+        })
+        .catch(() => {
+            msgBox.innerHTML = "❌ Lỗi kết nối khi lưu điểm.";
+            msgBox.style.background = "#f8d7da";
+        });
+    }
+
+    function showReview() {
+        document.getElementById('result-screen').classList.add('hidden');
+        document.getElementById('review-screen').classList.remove('hidden');
+        
+        let html = "";
+        currentQuestions.forEach((q, idx) => {
+            let correctStr = "";
+            let userStr = "";
+            let maxQ = (q.part === 1) ? 0.25 : (q.part === 3 ? 0.5 : 1.0);
+
+            if (q.type === 'mcq') {
+                correctStr = q.correct;
+                userStr = userAnswers[q.id] || "Chưa làm";
+            } else if (q.type === 'tf') {
+                correctStr = q.subItems.map(i => i.ans).join(" | ");
+                userStr = q.subItems.map((i, ix) => (userAnswers[q.id]||{})[ix] || "Trống").join(" | ");
+            } else if (q.type === 'short') {
+                correctStr = q.correct;
+                userStr = userAnswers[q.id] || "Trống";
+            } else if (q.type === 'drag') {
+                correctStr = q.correct.join(" | ");
+                userStr = q.slots.map((s, ix) => (userAnswers[q.id]||{})[ix] || "Trống").join(" | ");
+            }
+
+            const isFullCorrect = q.earned === maxQ;
+            const userColor = isFullCorrect ? "text-green" : "text-red";
+
+            html += `<div class="review-item">
+                <div class="review-line"><b>Câu ${idx+1}:</b> ${q.q.replace('[____]','_______')}</div>
+                <div class="review-line"><span class="label-badge">Đáp án đúng của đề:</span> <span class="text-green">${correctStr}</span></div>
+                <div class="review-line"><span class="label-badge">Đáp án học sinh đã chọn:</span> <span class="${userColor}">${userStr}</span></div>
+                <div class="review-line"><span class="label-badge">Điểm của câu đó:</span> <span class="${userColor}">${q.earned.toString().replace('.', ',')} / ${maxQ.toString().replace('.', ',')}</span></div>
+            </div>`;
+        });
+        document.getElementById('review-container').innerHTML = html;
+    }
+</script>
+
+</body>
+</html>
